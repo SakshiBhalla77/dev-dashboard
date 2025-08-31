@@ -623,3 +623,344 @@ class DevDashboard {
 
 // Initialize Dashboard
 const dashboard = new DevDashboard();
+
+
+// =========================
+// FULL-PAGE MODAL SYSTEM
+// =========================
+
+class ModalSystem {
+    constructor() {
+        this.createModalHTML();
+        this.setupModalEventListeners();
+    }
+
+    createModalHTML() {
+        // Create modal overlay
+        const modalHTML = `
+            <div id="fullPageModal" class="modal-overlay">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 id="modalTitle">
+                            <i id="modalIcon"></i>
+                            <span id="modalTitleText"></span>
+                        </h2>
+                        <button class="modal-close" id="closeModal">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body" id="modalBody">
+                        <!-- Dynamic content goes here -->
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add to body
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+
+    setupModalEventListeners() {
+        // Close modal handlers
+        document.getElementById('closeModal').addEventListener('click', () => this.closeModal());
+        document.getElementById('fullPageModal').addEventListener('click', (e) => {
+            if (e.target.id === 'fullPageModal') this.closeModal();
+        });
+        
+        // ESC key to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') this.closeModal();
+        });
+
+        // Add click handlers to panel headers
+        this.addPanelClickHandlers();
+    }
+
+    addPanelClickHandlers() {
+        // Get all panel headers and add click listeners
+        const panels = document.querySelectorAll('.panel-header h3');
+        
+        panels.forEach(header => {
+            const text = header.textContent.trim();
+            header.style.cursor = 'pointer';
+            header.style.transition = 'color 0.2s';
+            
+            header.addEventListener('mouseover', () => {
+                header.style.color = 'var(--accent-color)';
+            });
+            
+            header.addEventListener('mouseout', () => {
+                header.style.color = '';
+            });
+            
+            header.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                if (text.includes('Quick Notes')) {
+                    this.openNotesModal();
+                } else if (text.includes('To-Do List')) {
+                    this.openTodosModal();
+                } else if (text.includes('Bookmarks')) {
+                    this.openBookmarksModal();
+                } else if (text.includes('Snippets')) {
+                    this.openSnippetsModal();
+                }
+            });
+        });
+    }
+
+    openModal(title, icon, content) {
+        document.getElementById('modalTitleText').textContent = title;
+        document.getElementById('modalIcon').className = `fas fa-${icon}`;
+        document.getElementById('modalBody').innerHTML = content;
+        document.getElementById('fullPageModal').style.display = 'block';
+        document.body.style.overflow = 'hidden'; // Prevent background scroll
+    }
+
+    closeModal() {
+        document.getElementById('fullPageModal').style.display = 'none';
+        document.body.style.overflow = ''; // Restore scroll
+    }
+
+    openNotesModal() {
+        const notes = JSON.parse(localStorage.getItem('devDashboard_notes') || '[]');
+        
+        const content = `
+            <div class="modal-input-section">
+                <div class="input-group">
+                    <input type="text" id="modalNoteInput" placeholder="Add a new note..." style="font-size: 16px; padding: 12px;">
+                    <button id="modalAddNote" class="add-btn" style="padding: 12px 20px;">
+                        <i class="fas fa-plus"></i> Add Note
+                    </button>
+                </div>
+            </div>
+            
+            <div class="modal-items-grid">
+                ${notes.map(note => `
+                    <div class="modal-item">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <p style="margin: 0; flex: 1; font-size: 15px; line-height: 1.5;">${note.text}</p>
+                            <button class="item-btn delete-btn" onclick="dashboard.deleteNote(${note.id}); modalSystem.openNotesModal();" style="margin-left: 12px;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <small style="color: var(--text-secondary); margin-top: 8px; display: block;">
+                            ${new Date(note.timestamp).toLocaleDateString('en-US', { 
+                                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                            })}
+                        </small>
+                    </div>
+                `).join('')}
+            </div>
+            
+            ${notes.length === 0 ? '<p style="text-align: center; color: var(--text-secondary); font-size: 18px; margin-top: 3rem;">No notes yet. Add your first note above! 📝</p>' : ''}
+        `;
+
+        this.openModal('Quick Notes', 'sticky-note', content);
+
+        // Add event listener for modal add note
+        document.getElementById('modalAddNote').addEventListener('click', () => {
+            const input = document.getElementById('modalNoteInput');
+            const text = input.value.trim();
+            if (text) {
+                dashboard.addNote();
+                input.value = '';
+                this.openNotesModal(); // Refresh modal
+            }
+        });
+
+        document.getElementById('modalNoteInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('modalAddNote').click();
+            }
+        });
+    }
+
+    openTodosModal() {
+        const todos = JSON.parse(localStorage.getItem('devDashboard_todos') || '[]');
+        
+        const content = `
+            <div class="modal-input-section">
+                <div class="input-group">
+                    <input type="text" id="modalTodoInput" placeholder="Add a new task..." style="font-size: 16px; padding: 12px;">
+                    <button id="modalAddTodo" class="add-btn" style="padding: 12px 20px;">
+                        <i class="fas fa-plus"></i> Add Task
+                    </button>
+                </div>
+            </div>
+            
+            <div class="modal-items-grid">
+                ${todos.map(todo => `
+                    <div class="modal-item modal-todo-item ${todo.completed ? 'completed' : ''}">
+                        <input type="checkbox" ${todo.completed ? 'checked' : ''} 
+                               onchange="dashboard.toggleTodo(${todo.id}); modalSystem.openTodosModal();"
+                               style="margin-top: 2px;">
+                        <div style="flex: 1;">
+                            <p class="modal-todo-text" style="margin: 0; font-size: 15px;">${todo.text}</p>
+                            <small style="color: var(--text-secondary); margin-top: 4px; display: block;">
+                                ${new Date(todo.timestamp).toLocaleDateString('en-US', { 
+                                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                                })}
+                            </small>
+                        </div>
+                        <button class="item-btn delete-btn" onclick="dashboard.deleteTodo(${todo.id}); modalSystem.openTodosModal();" style="margin-left: 12px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `).join('')}
+            </div>
+            
+            ${todos.length === 0 ? '<p style="text-align: center; color: var(--text-secondary); font-size: 18px; margin-top: 3rem;">No tasks yet. Add your first task above! ✅</p>' : ''}
+        `;
+
+        this.openModal('To-Do List', 'check-square', content);
+
+        document.getElementById('modalAddTodo').addEventListener('click', () => {
+            const input = document.getElementById('modalTodoInput');
+            const text = input.value.trim();
+            if (text) {
+                dashboard.addTodo();
+                input.value = '';
+                this.openTodosModal();
+            }
+        });
+
+        document.getElementById('modalTodoInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('modalAddTodo').click();
+            }
+        });
+    }
+
+    openBookmarksModal() {
+        const bookmarks = JSON.parse(localStorage.getItem('devDashboard_bookmarks') || '[]');
+        
+        const content = `
+            <div class="modal-input-section">
+                <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px;">
+                    <input type="text" id="modalBookmarkTitle" placeholder="Title..." style="font-size: 16px; padding: 12px;">
+                    <input type="url" id="modalBookmarkUrl" placeholder="https://..." style="font-size: 16px; padding: 12px;">
+                    <button id="modalAddBookmark" class="add-btn" style="padding: 12px 20px;">
+                        <i class="fas fa-plus"></i> Add
+                    </button>
+                </div>
+            </div>
+            
+            <div class="modal-items-grid">
+                ${bookmarks.map(bookmark => `
+                    <div class="modal-item">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div style="flex: 1;">
+                                <a href="${bookmark.url}" target="_blank" class="modal-bookmark-link">
+                                    ${bookmark.title}
+                                </a>
+                                <p style="margin: 8px 0 0 0; font-size: 13px; color: var(--text-secondary); word-break: break-all;">
+                                    ${bookmark.url}
+                                </p>
+                                <small style="color: var(--text-secondary); margin-top: 8px; display: block;">
+                                    ${new Date(bookmark.timestamp).toLocaleDateString('en-US', { 
+                                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                                    })}
+                                </small>
+                            </div>
+                            <div style="margin-left: 12px; display: flex; gap: 4px;">
+                                <button class="item-btn" onclick="window.open('${bookmark.url}', '_blank')">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </button>
+                                <button class="item-btn delete-btn" onclick="dashboard.deleteBookmark(${bookmark.id}); modalSystem.openBookmarksModal();">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            
+            ${bookmarks.length === 0 ? '<p style="text-align: center; color: var(--text-secondary); font-size: 18px; margin-top: 3rem;">No bookmarks yet. Add your first bookmark above! 🔖</p>' : ''}
+        `;
+
+        this.openModal('Bookmarks', 'bookmark', content);
+
+        document.getElementById('modalAddBookmark').addEventListener('click', () => {
+            const title = document.getElementById('modalBookmarkTitle').value.trim();
+            const url = document.getElementById('modalBookmarkUrl').value.trim();
+            if (title && url) {
+                dashboard.addBookmark();
+                document.getElementById('modalBookmarkTitle').value = '';
+                document.getElementById('modalBookmarkUrl').value = '';
+                this.openBookmarksModal();
+            }
+        });
+
+        document.getElementById('modalBookmarkUrl').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('modalAddBookmark').click();
+            }
+        });
+    }
+
+    openSnippetsModal() {
+        const snippets = JSON.parse(localStorage.getItem('devDashboard_snippets') || '[]');
+        
+        const content = `
+            <div class="modal-input-section">
+                <div style="display: grid; gap: 12px;">
+                    <input type="text" id="modalSnippetTitle" placeholder="Snippet name..." style="font-size: 16px; padding: 12px;">
+                    <textarea id="modalSnippetCode" placeholder="Paste your code here..." rows="4" 
+                              style="font-size: 14px; padding: 12px; font-family: 'Courier New', monospace; resize: vertical;"></textarea>
+                    <button id="modalAddSnippet" class="add-btn" style="padding: 12px 20px; justify-self: start;">
+                        <i class="fas fa-plus"></i> Add Snippet
+                    </button>
+                </div>
+            </div>
+            
+            <div class="modal-items-grid">
+                ${snippets.map(snippet => `
+                    <div class="modal-item">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                            <h4 style="margin: 0; font-size: 16px; font-weight: 600;">${snippet.title}</h4>
+                            <div style="display: flex; gap: 4px;">
+                                <button class="item-btn" onclick="dashboard.copySnippet('${snippet.id}')" title="Copy code">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                                <button class="item-btn delete-btn" onclick="dashboard.deleteSnippet(${snippet.id}); modalSystem.openSnippetsModal();">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <pre class="modal-snippet-code">${snippet.code}</pre>
+                        <small style="color: var(--text-secondary); margin-top: 8px; display: block;">
+                            ${new Date(snippet.timestamp).toLocaleDateString('en-US', { 
+                                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                            })}
+                        </small>
+                    </div>
+                `).join('')}
+            </div>
+            
+            ${snippets.length === 0 ? '<p style="text-align: center; color: var(--text-secondary); font-size: 18px; margin-top: 3rem;">No snippets yet. Add your first code snippet above! 💻</p>' : ''}
+        `;
+
+        this.openModal('Code Snippets', 'code', content);
+
+        document.getElementById('modalAddSnippet').addEventListener('click', () => {
+            const title = document.getElementById('modalSnippetTitle').value.trim();
+            const code = document.getElementById('modalSnippetCode').value.trim();
+            if (title && code) {
+                dashboard.addSnippet();
+                document.getElementById('modalSnippetTitle').value = '';
+                document.getElementById('modalSnippetCode').value = '';
+                this.openSnippetsModal();
+            }
+        });
+
+        document.getElementById('modalSnippetCode').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                document.getElementById('modalAddSnippet').click();
+            }
+        });
+    }
+}
+
+// Initialize Modal System
+const modalSystem = new ModalSystem();
