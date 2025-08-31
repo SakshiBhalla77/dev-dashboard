@@ -626,7 +626,7 @@ const dashboard = new DevDashboard();
 
 
 // =========================
-// FULL-PAGE MODAL SYSTEM
+// FULL-PAGE MODAL SYSTEM - FIXED VERSION
 // =========================
 
 class ModalSystem {
@@ -722,6 +722,104 @@ class ModalSystem {
         document.body.style.overflow = ''; // Restore scroll
     }
 
+    // Helper function to add note from modal
+    addNoteFromModal() {
+        const input = document.getElementById('modalNoteInput');
+        const text = input.value.trim();
+        
+        if (!text) return;
+        
+        const notes = JSON.parse(localStorage.getItem('devDashboard_notes') || '[]');
+        const newNote = {
+            id: Date.now(),
+            text,
+            timestamp: new Date().toISOString()
+        };
+        
+        notes.unshift(newNote);
+        localStorage.setItem('devDashboard_notes', JSON.stringify(notes));
+        
+        input.value = '';
+        dashboard.renderNotes(); // Update main dashboard
+        this.openNotesModal(); // Refresh modal
+    }
+
+    // Helper function to add todo from modal
+    addTodoFromModal() {
+        const input = document.getElementById('modalTodoInput');
+        const text = input.value.trim();
+        
+        if (!text) return;
+        
+        const todos = JSON.parse(localStorage.getItem('devDashboard_todos') || '[]');
+        const newTodo = {
+            id: Date.now(),
+            text,
+            completed: false,
+            timestamp: new Date().toISOString()
+        };
+        
+        todos.unshift(newTodo);
+        localStorage.setItem('devDashboard_todos', JSON.stringify(todos));
+        
+        input.value = '';
+        dashboard.renderTodos(); // Update main dashboard
+        dashboard.updateStats(); // Update stats
+        this.openTodosModal(); // Refresh modal
+    }
+
+    // Helper function to add bookmark from modal
+    addBookmarkFromModal() {
+        const titleInput = document.getElementById('modalBookmarkTitle');
+        const urlInput = document.getElementById('modalBookmarkUrl');
+        const title = titleInput.value.trim();
+        const url = urlInput.value.trim();
+        
+        if (!title || !url) return;
+        
+        const bookmarks = JSON.parse(localStorage.getItem('devDashboard_bookmarks') || '[]');
+        const newBookmark = {
+            id: Date.now(),
+            title,
+            url: url.startsWith('http') ? url : 'https://' + url,
+            timestamp: new Date().toISOString()
+        };
+        
+        bookmarks.unshift(newBookmark);
+        localStorage.setItem('devDashboard_bookmarks', JSON.stringify(bookmarks));
+        
+        titleInput.value = '';
+        urlInput.value = '';
+        dashboard.renderBookmarks(); // Update main dashboard
+        this.openBookmarksModal(); // Refresh modal
+    }
+
+    // Helper function to add snippet from modal
+    addSnippetFromModal() {
+        const titleInput = document.getElementById('modalSnippetTitle');
+        const codeInput = document.getElementById('modalSnippetCode');
+        const title = titleInput.value.trim();
+        const code = codeInput.value.trim();
+        
+        if (!title || !code) return;
+        
+        const snippets = JSON.parse(localStorage.getItem('devDashboard_snippets') || '[]');
+        const newSnippet = {
+            id: Date.now(),
+            title,
+            code,
+            timestamp: new Date().toISOString()
+        };
+        
+        snippets.unshift(newSnippet);
+        localStorage.setItem('devDashboard_snippets', JSON.stringify(snippets));
+        
+        titleInput.value = '';
+        codeInput.value = '';
+        dashboard.renderSnippets(); // Update main dashboard
+        this.openSnippetsModal(); // Refresh modal
+    }
+
     openNotesModal() {
         const notes = JSON.parse(localStorage.getItem('devDashboard_notes') || '[]');
         
@@ -758,22 +856,19 @@ class ModalSystem {
 
         this.openModal('Quick Notes', 'sticky-note', content);
 
-        // Add event listener for modal add note
+        // Add event listeners - FIXED VERSION
         document.getElementById('modalAddNote').addEventListener('click', () => {
-            const input = document.getElementById('modalNoteInput');
-            const text = input.value.trim();
-            if (text) {
-                dashboard.addNote();
-                input.value = '';
-                this.openNotesModal(); // Refresh modal
-            }
+            this.addNoteFromModal();
         });
 
         document.getElementById('modalNoteInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                document.getElementById('modalAddNote').click();
+                this.addNoteFromModal();
             }
         });
+
+        // Focus the input
+        setTimeout(() => document.getElementById('modalNoteInput').focus(), 100);
     }
 
     openTodosModal() {
@@ -815,21 +910,19 @@ class ModalSystem {
 
         this.openModal('To-Do List', 'check-square', content);
 
+        // Add event listeners - FIXED VERSION
         document.getElementById('modalAddTodo').addEventListener('click', () => {
-            const input = document.getElementById('modalTodoInput');
-            const text = input.value.trim();
-            if (text) {
-                dashboard.addTodo();
-                input.value = '';
-                this.openTodosModal();
-            }
+            this.addTodoFromModal();
         });
 
         document.getElementById('modalTodoInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                document.getElementById('modalAddTodo').click();
+                this.addTodoFromModal();
             }
         });
+
+        // Focus the input
+        setTimeout(() => document.getElementById('modalTodoInput').focus(), 100);
     }
 
     openBookmarksModal() {
@@ -881,22 +974,19 @@ class ModalSystem {
 
         this.openModal('Bookmarks', 'bookmark', content);
 
+        // Add event listeners - FIXED VERSION
         document.getElementById('modalAddBookmark').addEventListener('click', () => {
-            const title = document.getElementById('modalBookmarkTitle').value.trim();
-            const url = document.getElementById('modalBookmarkUrl').value.trim();
-            if (title && url) {
-                dashboard.addBookmark();
-                document.getElementById('modalBookmarkTitle').value = '';
-                document.getElementById('modalBookmarkUrl').value = '';
-                this.openBookmarksModal();
-            }
+            this.addBookmarkFromModal();
         });
 
         document.getElementById('modalBookmarkUrl').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                document.getElementById('modalAddBookmark').click();
+                this.addBookmarkFromModal();
             }
         });
+
+        // Focus the first input
+        setTimeout(() => document.getElementById('modalBookmarkTitle').focus(), 100);
     }
 
     openSnippetsModal() {
@@ -943,22 +1033,19 @@ class ModalSystem {
 
         this.openModal('Code Snippets', 'code', content);
 
+        // Add event listeners - FIXED VERSION
         document.getElementById('modalAddSnippet').addEventListener('click', () => {
-            const title = document.getElementById('modalSnippetTitle').value.trim();
-            const code = document.getElementById('modalSnippetCode').value.trim();
-            if (title && code) {
-                dashboard.addSnippet();
-                document.getElementById('modalSnippetTitle').value = '';
-                document.getElementById('modalSnippetCode').value = '';
-                this.openSnippetsModal();
-            }
+            this.addSnippetFromModal();
         });
 
         document.getElementById('modalSnippetCode').addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && e.ctrlKey) {
-                document.getElementById('modalAddSnippet').click();
+                this.addSnippetFromModal();
             }
         });
+
+        // Focus the first input
+        setTimeout(() => document.getElementById('modalSnippetTitle').focus(), 100);
     }
 }
 
