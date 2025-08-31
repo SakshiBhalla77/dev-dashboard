@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dev Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Top Bar -->
+    <header class="top-bar">
+        <div class="search-container">
+            <i class="fas fa-search"></i>
+            <input type="text" id="globalSearch" placeholder="Search everything..." />
+            <button id="clearSearch" class="clear-btn" style="display: none;">×</button>
+        </div>
+        <div class="header-right">
+            <span id="currentDateTime"></span>
+            <button id="themeToggle" class="theme-btn">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Search Results -->
+    <div id="searchResults" class="search-results" style="display: none;"></div>
+
+    <!-- Main Dashboard -->
+    <main class="dashboard">
+        <!-- Quick Notes -->
+        <div class="panel">
+            <div class="panel-header">
+                <h3><i class="fas fa-sticky-note"></i> Quick Notes</h3>
+            </div>
+            <div class="panel-content">
+                <div class="input-group">
+                    <input type="text" id="noteInput" placeholder="Jot down a thought..." />
+                    <button id="addNote" class="add-btn"><i class="fas fa-plus"></i></button>
+                </div>
+                <div id="notesList" class="items-list"></div>
+            </div>
+        </div>
+
+        <!-- To-Do List -->
+        <div class="panel">
+            <div class="panel-header">
+                <h3><i class="fas fa-check-square"></i> To-Do List</h3>
+            </div>
+            <div class="panel-content">
+                <div class="input-group">
+                    <input type="text" id="todoInput" placeholder="Add a task..." />
+                    <button id="addTodo" class="add-btn"><i class="fas fa-plus"></i></button>
+                </div>
+                <div id="todosList" class="items-list"></div>
+            </div>
+        </div>
+
+        <!-- Bookmarks -->
+        <div class="panel">
+            <div class="panel-header">
+                <h3><i class="fas fa-bookmark"></i> Bookmarks</h3>
+            </div>
+            <div class="panel-content">
+                <div class="bookmark-inputs">
+                    <input type="text" id="bookmarkTitle" placeholder="Title..." />
+                    <input type="url" id="bookmarkUrl" placeholder="https://..." />
+                    <button id="addBookmark" class="add-btn"><i class="fas fa-plus"></i></button>
+                </div>
+                <div id="bookmarksList" class="items-list"></div>
+            </div>
+        </div>
+
+        <!-- Code Snippets -->
+        <div class="panel">
+            <div class="panel-header">
+                <h3><i class="fas fa-code"></i> Snippets</h3>
+            </div>
+            <div class="panel-content">
+                <div class="snippet-inputs">
+                    <input type="text" id="snippetTitle" placeholder="Snippet name..." />
+                    <textarea id="snippetCode" placeholder="Paste your code here..." rows="3"></textarea>
+                    <button id="addSnippet" class="add-btn"><i class="fas fa-plus"></i></button>
+                </div>
+                <div id="snippetsList" class="items-list"></div>
+            </div>
+        </div>
+
+        <!-- Daily Log -->
+        <div class="panel daily-log">
+            <div class="panel-header">
+                <h3><i class="fas fa-calendar-day"></i> Daily Log</h3>
+                <div class="log-nav">
+                    <button id="prevDay" class="nav-btn"><i class="fas fa-chevron-left"></i></button>
+                    <span id="currentLogDate"></span>
+                    <button id="nextDay" class="nav-btn"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+            <div class="panel-content">
+                <textarea id="dailyLogContent" placeholder="What happened today?" rows="8"></textarea>
+                <div class="log-actions">
+                    <button id="saveLog" class="save-btn">Save Log</button>
+                    <span id="saveStatus"></span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="stats">
+            <span id="todayStats">📊 Today: 0 tasks done</span>
+        </div>
+        <div class="footer-actions">
+            <button id="exportData" class="footer-btn">
+                <i class="fas fa-download"></i> Export
+            </button>
+            <button id="importData" class="footer-btn">
+                <i class="fas fa-upload"></i> Import
+            </button>
+            <input type="file" id="importFile" accept=".json" style="display: none;">
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
